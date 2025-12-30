@@ -1,72 +1,824 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AR Step Around Bogor - Scan Destinasi</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AR Step Around Bogor - Scan</title>
 
-  <!-- A-Frame dan AR.js CDN -->
-  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    
+    <!-- AR.js -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-  <style>
-    /* Fullscreen camera dan AR scene */
-    body, html {
-      margin: 0; padding: 0; overflow: hidden;
-      width: 100%; height: 100%;
-      font-family: Arial, sans-serif;
-    }
-    a-scene {
-      width: 100vw; 
-      height: 100vh;
-    }
-  </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(45, 90, 39, 0.95), rgba(26, 58, 21, 0.95));
+            color: white;
+            padding: 15px 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Scan Instruction */
+        .scan-instruction {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            z-index: 1000;
+            text-align: center;
+            font-size: 14px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .scan-instruction .icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Status Indicator */
+        .status {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(45, 90, 39, 0.9);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            z-index: 1000;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(45, 90, 39, 0.98), rgba(26, 58, 21, 0.98));
+            color: white;
+            padding: 25px;
+            z-index: 1001;
+            transform: translateY(100%);
+            transition: transform 0.4s ease;
+            border-radius: 25px 25px 0 0;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .info-panel.active {
+            transform: translateY(0);
+        }
+
+        .info-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .info-panel .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .info-panel h2 {
+            font-size: 22px;
+            margin-bottom: 5px;
+            color: #ffb347;
+        }
+
+        .info-panel .subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 15px;
+        }
+
+        .info-panel .description {
+            font-size: 14px;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .info-panel .image-container {
+            margin-top: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .info-panel .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Marker List */
+        .marker-list {
+            position: fixed;
+            top: 70px;
+            right: 15px;
+            z-index: 999;
+        }
+
+        .marker-item {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .marker-item .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .marker-item.found .dot {
+            background: #4ade80;
+        }
+
+        /* Hide scan instruction when marker found */
+        .scan-instruction.hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-    
-    <!-- Marker Taman Akuatik -->
-    <a-marker type="pattern" url="assets/markers/akuatik.patt">
-      <a-plane position="0 0 -0.1" width="2.5" height="1.5" color="#FFFFFF" opacity="0.85"></a-plane>
-      <a-text value="Taman Akuatik\nAquatic Garden\n\nMemamerkan tanaman air seperti teratai dan lotus.\nSuasana asri dan spot foto alami." 
-              position="-1 0.4 0" width="3" color="#000000" align="left"></a-text>
-      <a-image src="assets/image/fotoakuatik1.jpeg" position="0 -0.3 0" width="1.8" height="1"></a-image>
-    </a-marker>
+    <!-- Header -->
+    <div class="header">
+        <button class="back-btn" onclick="goBack()">← Kembali</button>
+        <h1>🌿 Step Around Bogor</h1>
+    </div>
 
-    <!-- Marker Griya Anggrek -->
-    <a-marker type="pattern" url="assets/markers/anggrek.patt">
-      <a-plane position="0 0 -0.1" width="2.5" height="1.5" color="#FFFFFF" opacity="0.85"></a-plane>
-      <a-text value="Griya Anggrek\nOrchid House\n\nMenampilkan koleksi anggrek Indonesia yang langka dan indah.\nTempat pelestarian dan edukasi flora." 
-              position="-1 0.4 0" width="3" color="#000000" align="left"></a-text>
-      <a-image src="assets/image/anggrek2.jpg" position="0 -0.3 0" width="1.8" height="1"></a-image>
-    </a-marker>
+    <!-- Marker Status List -->
+    <div class="marker-list">
+        <div class="marker-item" id="status-mexico">
+            <span class="dot"></span> Taman Mexico
+        </div>
+        <div class="marker-item" id="status-nepenthes">
+            <span class="dot"></span> Taman Nepenthes
+        </div>
+        <div class="marker-item" id="status-anggrek">
+            <span class="dot"></span> Griya Anggrek
+        </div>
+        <div class="marker-item" id="status-istana">
+            <span class="dot"></span> Istana Bogor
+        </div>
+        <div class="marker-item" id="status-akuatik">
+            <span class="dot"></span> Taman Akuatik
+        </div>
+    </div>
 
-    <!-- Marker Istana Bogor -->
-    <a-marker type="pattern" url="assets/markers/istana.patt">
-      <a-plane position="0 0 -0.1" width="2.5" height="1.5" color="#FFFFFF" opacity="0.85"></a-plane>
-      <a-text value="Istana Bogor\nBogor Presidential Palace\n\nIstana kepresidenan bersejarah dengan taman luas dan rusa.\nIkon sejarah serta budaya Bogor." 
-              position="-1 0.4 0" width="3" color="#000000" align="left"></a-text>
-      <a-image src="assets/image/istanabogor1.jpeg" position="0 -0.3 0" width="1.8" height="1"></a-image>
-    </a-marker>
+    <!-- Scan Instruction -->
+    <div class="scan-instruction" id="scanInstruction">
+        <span class="icon">📷</span>
+        Arahkan kamera ke marker destinasi
+    </div>
 
-    <!-- Marker Taman Mexico -->
-    <a-marker type="pattern" url="assets/markers/logomexico.patt">
-      <a-plane position="0 0 -0.1" width="2.5" height="1.5" color="#FFFFFF" opacity="0.85"></a-plane>
-      <a-text value="Taman Mexico\nMexican Garden\n\nTanaman kaktus dan Agave unik.\nSpot edukasi dan foto." 
-              position="-1 0.4 0" width="3" color="#000000" align="left"></a-text>
-      <a-image src="assets/image/fotomexico1.jpeg" position="0 -0.3 0" width="1.8" height="1"></a-image>
-    </a-marker>
+    <!-- Status -->
+    <div class="status">
+        <span class="status-dot"></span>
+        <span id="statusText">Kamera aktif - Siap scan</span>
+    </div>
 
-    <!-- Marker Taman Nepenthes -->
-    <a-marker type="pattern" url="assets/markers/nepenthes.patt">
-      <a-plane position="0 0 -0.1" width="2.5" height="1.5" color="#FFFFFF" opacity="0.85"></a-plane>
-      <a-text value="Taman Nepenthes\nTanaman kantong semar.\nWisata edukatif." position="-1 0.4 0" width="3" color="#000000" align="left"></a-text>
-      <a-image src="assets/image/nepenthes2.jpeg" position="0 -0.3 0" width="1.8" height="1"></a-image>
-    </a-marker>
+    <!-- Info Panel -->
+    <div class="info-panel" id="infoPanel">
+        <button class="close-btn" onclick="closePanel()">×</button>
+        <h2 id="panelTitle">Nama Destinasi</h2>
+        <p class="subtitle" id="panelSubtitle">Subtitle</p>
+        <p class="description" id="panelDescription">Deskripsi destinasi akan muncul di sini.</p>
+        <div class="image-container">
+            <img id="panelImage" src="" alt="Foto Destinasi">
+        </div>
+    </div>
 
-    <!-- Kamera pengguna -->
-    <a-entity camera></a-entity>
-  </a-scene>
+    <!-- ==================== AR SCENE ==================== -->
+    <a-scene
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true; antialias: true;"
+        vr-mode-ui="enabled: false"
+    >
+        <!-- ========== MARKER TAMAN MEXICO ========== -->
+        <a-marker
+            id="marker-mexico"
+            type="pattern"
+            url="assets/markers/mexico.patt"
+            emitevents="true"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.01"
+            smoothThreshold="2"
+        >
+            <!-- Background Card -->
+            <a-plane
+                position="0 0.5 0"
+                rotation="-90 0 0"
+                width="2.5"
+                height="1.8"
+                color="#ffffff"
+                opacity="0.95"
+                side="double"
+            ></a-plane>
+
+            <!-- Header Bar -->
+            <a-plane
+                position="0 0.5 0.01"
+                rotation="-90 0 0"
+                width="2.5"
+                height="0.4"
+                color="#2d5a27"
+                opacity="1"
+            ></a-plane>
+
+            <!-- Title -->
+            <a-text
+                value="TAMAN MEXICO"
+                position="0 0.5 0.02"
+                rotation="-90 0 0"
+                width="2.5"
+                color="#ffb347"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Subtitle -->
+            <a-text
+                value="Mexican Garden"
+                position="0 0.3 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#666666"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Description -->
+            <a-text
+                value="Taman Meksiko memamerkan koleksi\ntanaman kaktus dan Agave unik.\nSpot edukasi dan foto favorit."
+                position="0 0 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#333333"
+                align="center"
+                baseline="top"
+                font="roboto"
+            ></a-text>
+
+            <!-- 3D Decoration -->
+            <a-box
+                position="0 0.8 0"
+                scale="0.15 0.15 0.15"
+                color="#ff8c00"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 3000; easing: linear"
+            ></a-box>
+        </a-marker>
+
+        <!-- ========== MARKER TAMAN NEPENTHES ========== -->
+        <a-marker
+            id="marker-nepenthes"
+            type="pattern"
+            url="assets/markers/nepenthes.patt"
+            emitevents="true"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.01"
+            smoothThreshold="2"
+        >
+            <!-- Background Card -->
+            <a-plane
+                position="0 0.5 0"
+                rotation="-90 0 0"
+                width="2.5"
+                height="1.8"
+                color="#ffffff"
+                opacity="0.95"
+                side="double"
+            ></a-plane>
+
+            <!-- Header Bar -->
+            <a-plane
+                position="0 0.5 0.01"
+                rotation="-90 0 0"
+                width="2.5"
+                height="0.4"
+                color="#2d5a27"
+                opacity="1"
+            ></a-plane>
+
+            <!-- Title -->
+            <a-text
+                value="TAMAN NEPENTHES"
+                position="0 0.5 0.02"
+                rotation="-90 0 0"
+                width="2.5"
+                color="#ffb347"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Subtitle -->
+            <a-text
+                value="Nepenthes Garden"
+                position="0 0.3 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#666666"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Description -->
+            <a-text
+                value="Menampilkan tanaman kantong semar\n(Nepenthes) yang unik dan langka.\nWisata edukatif tumbuhan karnivora."
+                position="0 0 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#333333"
+                align="center"
+                baseline="top"
+                font="roboto"
+            ></a-text>
+
+            <!-- 3D Decoration -->
+            <a-sphere
+                position="0 0.8 0"
+                radius="0.1"
+                color="#4ade80"
+                animation="property: position; to: 0 1 0; dir: alternate; loop: true; dur: 1500; easing: easeInOutQuad"
+            ></a-sphere>
+        </a-marker>
+
+               <!-- ========== MARKER GRIYA ANGGREK ========== -->
+        <a-marker
+            id="marker-anggrek"
+            type="pattern"
+            url="assets/markers/anggrek.patt"
+            emitevents="true"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.01"
+            smoothThreshold="2"
+        >
+            <!-- Background Card -->
+            <a-plane
+                position="0 0.5 0"
+                rotation="-90 0 0"
+                width="2.5"
+                height="1.8"
+                color="#ffffff"
+                opacity="0.95"
+                side="double"
+            ></a-plane>
+
+            <!-- Header Bar -->
+            <a-plane
+                position="0 0.5 0.01"
+                rotation="-90 0 0"
+                width="2.5"
+                height="0.4"
+                color="#2d5a27"
+                opacity="1"
+            ></a-plane>
+
+            <!-- Title -->
+            <a-text
+                value="GRIYA ANGGREK"
+                position="0 0.5 0.02"
+                rotation="-90 0 0"
+                width="2.5"
+                color="#ffb347"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Subtitle -->
+            <a-text
+                value="Orchid House"
+                position="0 0.3 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#666666"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Description -->
+            <a-text
+                value="Menampilkan koleksi anggrek Indonesia\nyang langka dan indah.\nTempat pelestarian dan edukasi flora."
+                position="0 0 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#333333"
+                align="center"
+                baseline="top"
+                font="roboto"
+            ></a-text>
+
+            <!-- 3D Decoration -->
+            <a-torus
+                position="0 0.8 0"
+                radius="0.1"
+                radius-tubular="0.02"
+                color="#ff69b4"
+                animation="property: rotation; to: 360 360 0; loop: true; dur: 4000; easing: linear"
+            ></a-torus>
+        </a-marker>
+
+        <!-- ========== MARKER ISTANA BOGOR ========== -->
+        <a-marker
+            id="marker-istana"
+            type="pattern"
+            url="assets/markers/istana.patt"
+            emitevents="true"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.01"
+            smoothThreshold="2"
+        >
+            <!-- Background Card -->
+            <a-plane
+                position="0 0.5 0"
+                rotation="-90 0 0"
+                width="2.5"
+                height="1.8"
+                color="#ffffff"
+                opacity="0.95"
+                side="double"
+            ></a-plane>
+
+            <!-- Header Bar -->
+            <a-plane
+                position="0 0.5 0.01"
+                rotation="-90 0 0"
+                width="2.5"
+                height="0.4"
+                color="#2d5a27"
+                opacity="1"
+            ></a-plane>
+
+            <!-- Title -->
+            <a-text
+                value="ISTANA BOGOR"
+                position="0 0.5 0.02"
+                rotation="-90 0 0"
+                width="2.5"
+                color="#ffb347"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Subtitle -->
+            <a-text
+                value="Bogor Presidential Palace"
+                position="0 0.3 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#666666"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Description -->
+            <a-text
+                value="Istana kepresidenan bersejarah\ndengan taman luas dan rusa.\nIkon sejarah serta budaya Bogor."
+                position="0 0 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#333333"
+                align="center"
+                baseline="top"
+                font="roboto"
+            ></a-text>
+
+            <!-- 3D Decoration -->
+            <a-cone
+                position="0 0.8 0"
+                radius-bottom="0.1"
+                radius-top="0"
+                height="0.2"
+                color="#ffd700"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 2500; easing: linear"
+            ></a-cone>
+        </a-marker>
+
+        <!-- ========== MARKER TAMAN AKUATIK ========== -->
+        <a-marker
+            id="marker-akuatik"
+            type="pattern"
+            url="assets/markers/akuatik.patt"
+            emitevents="true"
+            smooth="true"
+            smoothCount="5"
+            smoothTolerance="0.01"
+            smoothThreshold="2"
+        >
+            <!-- Background Card -->
+            <a-plane
+                position="0 0.5 0"
+                rotation="-90 0 0"
+                width="2.5"
+                height="1.8"
+                color="#ffffff"
+                opacity="0.95"
+                side="double"
+            ></a-plane>
+
+            <!-- Header Bar -->
+            <a-plane
+                position="0 0.5 0.01"
+                rotation="-90 0 0"
+                width="2.5"
+                height="0.4"
+                color="#2d5a27"
+                opacity="1"
+            ></a-plane>
+
+            <!-- Title -->
+            <a-text
+                value="TAMAN AKUATIK"
+                position="0 0.5 0.02"
+                rotation="-90 0 0"
+                width="2.5"
+                color="#ffb347"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Subtitle -->
+            <a-text
+                value="Aquatic Garden"
+                position="0 0.3 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#666666"
+                align="center"
+                font="roboto"
+            ></a-text>
+
+            <!-- Description -->
+            <a-text
+                value="Memamerkan tanaman air seperti\nteratai dan lotus.\nSuasana asri dan spot foto alami."
+                position="0 0 0.02"
+                rotation="-90 0 0"
+                width="2"
+                color="#333333"
+                align="center"
+                baseline="top"
+                font="roboto"
+            ></a-text>
+
+            <!-- 3D Decoration -->
+            <a-cylinder
+                position="0 0.8 0"
+                radius="0.08"
+                height="0.15"
+                color="#00bfff"
+                animation="property: scale; to: 1.2 1.2 1.2; dir: alternate; loop: true; dur: 1000; easing: easeInOutQuad"
+            ></a-cylinder>
+        </a-marker>
+
+        <!-- ========== CAMERA ========== -->
+        <a-entity camera></a-entity>
+
+    </a-scene>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+        // ========== DATA DESTINASI ==========
+        const destinations = {
+            mexico: {
+                title: "TAMAN MEXICO",
+                subtitle: "Mexican Garden",
+                description: "Taman Meksiko Bogor di Kebun Raya Bogor menampilkan lebih dari 100 jenis tanaman gurun seperti kaktus, agave, dan sukulen dari Amerika Tengah dan Selatan. Nuansanya unik seperti di Meksiko, cocok untuk belajar tanaman langka sekaligus spot foto Instagramable.",
+                image: "assets/image/fotomexico1.jpeg"
+            },
+            nepenthes: {
+                title: "TAMAN NEPENTHES",
+                subtitle: "Nepenthes Garden",
+                description: "Taman Nepenthes Kebun Raya Bogor menampilkan berbagai jenis kantong semar (Nepenthes), yaitu tanaman karnivora unik yang hidup di lingkungan lembap. Taman ini cocok untuk wisata edukatif karena pengunjung bisa belajar tentang cara tumbuhan memerangkap serangga.",
+                image: "assets/image/nepenthes1.jpg"
+            },
+            anggrek: {
+                title: "GRIYA ANGGREK",
+                subtitle: "Orchid House",
+                description: "Griya Anggrek Kebun Raya Bogor menampilkan beragam koleksi anggrek lokal dan langka Indonesia yang dibudidayakan di rumah kaca. Tempat ini cocok untuk wisata edukatif dan menikmati keindahan anggrek dengan suasana yang tertata dan tenang.",
+                image: "assets/image/anggrek1.jpeg"
+            },
+            istana: {
+                title: "ISTANA BOGOR",
+                subtitle: "Bogor Presidential Palace",
+                description: "Istana Bogor merupakan istana kepresidenan bersejarah yang berada di kawasan Kebun Raya Bogor. Istana ini memiliki arsitektur klasik peninggalan kolonial dan halaman luas yang dihuni rusa, menjadikannya salah satu ikon sejarah dan budaya Kota Bogor.",
+                image: "assets/image/istanabogor1.jpeg"
+            },
+            akuatik: {
+                title: "TAMAN AKUATIK",
+                subtitle: "Aquatic Garden",
+                description: "Taman Akuatik Bogor di Kebun Raya Bogor menampilkan beragam tanaman air seperti teratai, lotus, dan tumbuhan rawa dari berbagai wilayah. Suasananya tenang dan asri, cocok untuk wisata edukatif, menikmati keindahan tanaman akuatik, sekaligus spot foto alami.",
+                image: "assets/image/fotoakuatik1.jpeg"
+            }
+        };
+
+        // ========== VARIABEL GLOBAL ==========
+        let currentMarker = null;
+
+        // ========== FUNGSI NAVIGASI ==========
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        // ========== FUNGSI PANEL INFO ==========
+        function showPanel(destinationKey) {
+            const dest = destinations[destinationKey];
+            if (!dest) return;
+
+            document.getElementById('panelTitle').textContent = dest.title;
+            document.getElementById('panelSubtitle').textContent = dest.subtitle;
+            document.getElementById('panelDescription').textContent = dest.description;
+            document.getElementById('panelImage').src = dest.image;
+            document.getElementById('panelImage').alt = dest.title;
+
+            document.getElementById('infoPanel').classList.add('active');
+            document.getElementById('scanInstruction').classList.add('hidden');
+        }
+
+        function closePanel() {
+            document.getElementById('infoPanel').classList.remove('active');
+        }
+
+        // ========== FUNGSI UPDATE STATUS ==========
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function setMarkerStatus(markerId, found) {
+            const statusEl = document.getElementById('status-' + markerId);
+            if (statusEl) {
+                if (found) {
+                    statusEl.classList.add('found');
+                } else {
+                    statusEl.classList.remove('found');
+                }
+            }
+        }
+
+        // ========== EVENT LISTENER MARKER ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 AR Step Around Bogor - Initializing...');
+
+            // Daftar marker dan ID-nya
+            const markers = [
+                { id: 'marker-mexico', key: 'mexico' },
+                { id: 'marker-nepenthes', key: 'nepenthes' },
+                { id: 'marker-anggrek', key: 'anggrek' },
+                { id: 'marker-istana', key: 'istana' },
+                { id: 'marker-akuatik', key: 'akuatik' }
+            ];
+
+            // Setup event listener untuk setiap marker
+            markers.forEach(function(markerInfo) {
+                const markerEl = document.getElementById(markerInfo.id);
+
+                if (markerEl) {
+                    // Event: Marker ditemukan
+                    markerEl.addEventListener('markerFound', function() {
+                        console.log('✅ Marker Found:', markerInfo.key);
+                        currentMarker = markerInfo.key;
+
+                        // Update UI
+                        updateStatus('Marker terdeteksi: ' + destinations[markerInfo.key].title);
+                        setMarkerStatus(markerInfo.key, true);
+                        showPanel(markerInfo.key);
+
+                        // Sembunyikan instruksi scan
+                        document.getElementById('scanInstruction').classList.add('hidden');
+                    });
+
+                    // Event: Marker hilang
+                    markerEl.addEventListener('markerLost', function() {
+                        console.log('❌ Marker Lost:', markerInfo.key);
+
+                        // Update UI
+                        updateStatus('Kamera aktif - Siap scan');
+                        setMarkerStatus(markerInfo.key, false);
+
+                        // Tampilkan kembali instruksi scan
+                        document.getElementById('scanInstruction').classList.remove('hidden');
+
+                        currentMarker = null;
+                    });
+
+                    console.log('📍 Marker registered:', markerInfo.id);
+                } else {
+                    console.warn('⚠️ Marker element not found:', markerInfo.id);
+                }
+            });
+
+            console.log('✅ AR Scene Ready!');
+            updateStatus('Kamera aktif - Siap scan');
+        });
+
+        // ========== ERROR HANDLING ==========
+        window.addEventListener('error', function(e) {
+            console.error('❌ Error:', e.message);
+        });
+
+        // ========== SCENE LOADED ==========
+        const scene = document.querySelector('a-scene');
+        if (scene) {
+            scene.addEventListener('loaded', function() {
+                console.log('✅ A-Frame Scene Loaded');
+            });
+
+            scene.addEventListener('arjs-video-loaded', function() {
+                console.log('✅ AR.js Video Loaded');
+                updateStatus('Kamera aktif - Siap scan');
+            });
+        }
+    </script>
 </body>
 </html>
-
