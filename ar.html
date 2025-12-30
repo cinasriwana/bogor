@@ -127,13 +127,14 @@
             right: 0;
             background: linear-gradient(135deg, rgba(45, 90, 39, 0.98), rgba(26, 58, 21, 0.98));
             color: white;
-            padding: 25px;
+            padding: 30px 25px;
             z-index: 1001;
             transform: translateY(100%);
             transition: transform 0.4s ease;
             border-radius: 25px 25px 0 0;
             max-height: 60vh;
-            overflow-y: auto;
+            overflow-y: auto; /* enable vertical scroll */
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
         }
 
         .info-panel.active {
@@ -161,33 +162,69 @@
         }
 
         .info-panel h2 {
-            font-size: 22px;
-            margin-bottom: 5px;
+            font-size: 26px; /* diperbesar */
+            margin-bottom: 8px;
             color: #ffb347;
+            font-weight: 700;
         }
 
         .info-panel .subtitle {
-            font-size: 14px;
-            color: rgba(255,255,255,0.7);
+            font-size: 18px; /* diperbesar */
+            color: rgba(255,255,255,0.85);
             margin-bottom: 15px;
+            font-weight: 600;
         }
 
         .info-panel .description {
-            font-size: 14px;
-            line-height: 1.7;
-            color: rgba(255,255,255,0.9);
+            font-size: 16px; /* diperbesar */
+            line-height: 1.8;
+            color: rgba(255,255,255,0.95);
+            margin-bottom: 20px;
         }
 
-        .info-panel .image-container {
-            margin-top: 15px;
-            border-radius: 10px;
+        .info-panel .image-container-main {
+            border-radius: 15px;
             overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
 
-        .info-panel .image-container img {
+        .info-panel .image-container-main img {
             width: 100%;
             height: auto;
             display: block;
+            border-radius: 15px;
+        }
+
+        /* Container tambah 2 gambar scroll horizontal */
+        .info-panel .image-container-scroll {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .info-panel .image-container-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .info-panel .image-container-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 140, 0, 0.6);
+            border-radius: 10px;
+        }
+
+        .info-panel .image-container-scroll img {
+            flex-shrink: 0;
+            width: 48%; /* 2 gambar berdampingan */
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .info-panel .image-container-scroll img:hover {
+            transform: scale(1.05);
         }
 
         /* Marker List */
@@ -226,6 +263,7 @@
             display: none;
         }
     </style>
+    
 </head>
 <body>
     <!-- Header -->
@@ -269,10 +307,17 @@
     <div class="info-panel" id="infoPanel">
         <button class="close-btn" onclick="closePanel()">×</button>
         <h2 id="panelTitle">Nama Destinasi</h2>
-        <p class="subtitle" id="panelSubtitle">Subtitle</p>
-        <p class="description" id="panelDescription">Deskripsi destinasi akan muncul di sini.</p>
-        <div class="image-container">
-            <img id="panelImage" src="" alt="Foto Destinasi">
+        <p class="subtitle" id="panelSubtitle">Sub Judul Destinasi</p>
+        <p class="description" id="panelDescription">Deskripsi destinasi akan tampil di sini.</p>
+
+        <!-- Gambar utama besar -->
+        <div class="image-container-main">
+            <img id="panelImage" src="" alt="Foto Destinasi" />
+        </div>
+
+        <!-- Dua gambar tambahan scroll horizontal -->
+        <div class="image-container-scroll" id="additionalImages">
+            <!-- Contoh gambar tambahan akan diisi melalui JS -->
         </div>
     </div>
 
@@ -674,32 +719,51 @@
             mexico: {
                 title: "TAMAN MEXICO",
                 subtitle: "Mexican Garden",
-                description: "Taman Meksiko Bogor di Kebun Raya Bogor menampilkan lebih dari 100 jenis tanaman gurun seperti kaktus, agave, dan sukulen dari Amerika Tengah dan Selatan. Nuansanya unik seperti di Meksiko, cocok untuk belajar tanaman langka sekaligus spot foto Instagramable.",
-                image: "assets/image/fotomexico1.jpeg"
+                description: "Taman Meksiko Bogor di Kebun Raya Bogor menampilkan lebih dari 100 jenis tanaman gurun seperti kaktus, agave, dan sukulen dari Amerika Tengah dan Selatan.",
+                image: "assets/image/fotomexico1.jpeg",
+                additionalImages: [
+                    "assets/image/fotomexico2.jpeg"
+                ]
             },
             nepenthes: {
                 title: "TAMAN NEPENTHES",
                 subtitle: "Nepenthes Garden",
                 description: "Taman Nepenthes Kebun Raya Bogor menampilkan berbagai jenis kantong semar (Nepenthes), yaitu tanaman karnivora unik yang hidup di lingkungan lembap. Taman ini cocok untuk wisata edukatif karena pengunjung bisa belajar tentang cara tumbuhan memerangkap serangga.",
-                image: "assets/image/nepenthes1.jpg"
+                image: "assets/image/nepenthes1.webp",
+                additionalImages: [
+                    "assets/image/nepenthes2.jpeg",
+                    "assets/image/nepenthes3.jpg"
+                ]
             },
             anggrek: {
                 title: "GRIYA ANGGREK",
                 subtitle: "Orchid House",
                 description: "Griya Anggrek Kebun Raya Bogor menampilkan beragam koleksi anggrek lokal dan langka Indonesia yang dibudidayakan di rumah kaca. Tempat ini cocok untuk wisata edukatif dan menikmati keindahan anggrek dengan suasana yang tertata dan tenang.",
-                image: "assets/image/anggrek1.jpeg"
+                image: "assets/image/anggrek1.webp",
+                additionalImages: [
+                    "assets/image/anggrek2.jpg",
+                    "assets/image/anggrek3.webp"
+                ]
             },
             istana: {
                 title: "ISTANA BOGOR",
                 subtitle: "Bogor Presidential Palace",
                 description: "Istana Bogor merupakan istana kepresidenan bersejarah yang berada di kawasan Kebun Raya Bogor. Istana ini memiliki arsitektur klasik peninggalan kolonial dan halaman luas yang dihuni rusa, menjadikannya salah satu ikon sejarah dan budaya Kota Bogor.",
-                image: "assets/image/istanabogor1.jpeg"
+                image: "assets/image/istanabogor1.jpeg",
+                additionalImages: [
+                    "assets/image/istanabogor2.jpg",
+                    "assets/image/istanabogor3.jpg"
+                ]
             },
             akuatik: {
                 title: "TAMAN AKUATIK",
                 subtitle: "Aquatic Garden",
                 description: "Taman Akuatik Bogor di Kebun Raya Bogor menampilkan beragam tanaman air seperti teratai, lotus, dan tumbuhan rawa dari berbagai wilayah. Suasananya tenang dan asri, cocok untuk wisata edukatif, menikmati keindahan tanaman akuatik, sekaligus spot foto alami.",
-                image: "assets/image/fotoakuatik1.jpeg"
+                image: "assets/image/fotoakuatik1.jpeg",
+                additionalImages: [
+                    "assets/image/fotoakuatik2.jpg",
+                    "assets/image/fotoakuatik3.jpg"
+                ]
             }
         };
 
@@ -712,6 +776,7 @@
         }
 
         // ========== FUNGSI PANEL INFO ==========
+        // Tambahkan dua foto tambahan ke container scroll
         function showPanel(destinationKey) {
             const dest = destinations[destinationKey];
             if (!dest) return;
@@ -722,12 +787,23 @@
             document.getElementById('panelImage').src = dest.image;
             document.getElementById('panelImage').alt = dest.title;
 
+            const additionalImagesContainer = document.getElementById('additionalImages');
+
+            // Kosongkan dulu isi container gambar tambahan
+            additionalImagesContainer.innerHTML = '';
+
+            // Kita asumsikan Anda menambahkan array 'additionalImages' di data destinations
+            if(dest.additionalImages && dest.additionalImages.length > 0) {
+                dest.additionalImages.forEach(imgSrc => {
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.alt = dest.title + ' photo';
+                    additionalImagesContainer.appendChild(img);
+                });
+            }
+
             document.getElementById('infoPanel').classList.add('active');
             document.getElementById('scanInstruction').classList.add('hidden');
-        }
-
-        function closePanel() {
-            document.getElementById('infoPanel').classList.remove('active');
         }
 
         // ========== FUNGSI UPDATE STATUS ==========
