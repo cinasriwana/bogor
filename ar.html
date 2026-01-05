@@ -788,14 +788,14 @@
             ];
 
             // Setup event listener untuk setiap marker
-            markers.forEach(function(markerInfo) {
+            markers.forEach(function(markerInfo){
                 const markerEl = document.getElementById(markerInfo.id);
 
-                if (markerEl) {
-                    // Event: Marker ditemukan
-                    markerEl.addEventListener('markerFound', function() {
+                if(markerEl){
+                    markerEl.addEventListener('markerFound', function(){
+                        if(currentMarker === markerInfo.key) return; // jika marker yang sama, abaikan
+
                         console.log('✅ Marker Found:', markerInfo.key);
-                        currentMarker = markerInfo.key;
 
                         // Update UI
                         updateStatus('Marker terdeteksi: ' + destinations[markerInfo.key].title);
@@ -806,23 +806,15 @@
                         document.getElementById('scanInstruction').classList.add('hidden');
                     });
 
-                    // Event: Marker hilang
-                    markerEl.addEventListener('markerLost', function() {
-                        console.log('❌ Marker Lost:', markerInfo.key);
-
-                        // Update UI
-                        updateStatus('Kamera aktif - Siap scan');
-                        setMarkerStatus(markerInfo.key, false);
-
-                        // Tampilkan kembali instruksi scan
-                        document.getElementById('scanInstruction').classList.remove('hidden');
-
-                        currentMarker = null;
+                    // Tidak gunakan markerLost supaya info panel tetap stay
+                    /*
+                    markerEl.addEventListener('markerLost', function(){
+                        // Kosongkan jika ingin hilangkan panel saat marker hilang
+                        // closePanel();
                     });
-
-                    console.log('📍 Marker registered:', markerInfo.id);
+                    */
                 } else {
-                    console.warn('⚠️ Marker element not found:', markerInfo.id);
+                    console.warn('⚠️ Marker element not found: ', markerInfo.id);
                 }
             });
 
